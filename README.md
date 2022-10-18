@@ -1,6 +1,8 @@
 # sra-human-scrubber-nf
 Apply the NCBI human read removal tool (HRRT) to mask human reads from metagenomic data
 
+[![Test Workflow](https://github.com/FredHutch/sra-human-scrubber-nf/actions/workflows/test.yaml/badge.svg)](https://github.com/FredHutch/sra-human-scrubber-nf/actions/workflows/test.yaml)
+
 ## Background
 
 When submitting genomic sequences to public repositories, it is important to
