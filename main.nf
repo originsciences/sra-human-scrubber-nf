@@ -45,7 +45,7 @@ Required Arguments:
 
   Resources:
   --mem_gbs             Amount of memory used per process (in gigabytes)
-  --cpus                Number of CPUs use per process
+  --cpus                Number of CPUs used per process
     """.stripIndent()
 }
 
