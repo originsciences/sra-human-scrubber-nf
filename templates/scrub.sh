@@ -32,3 +32,6 @@ for INPUT in input/*; do
     echo "Done processing \$INPUT"
 
 done
+
+# Remove the input folder
+rm -r input
