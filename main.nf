@@ -1,109 +1,74 @@
 #!/usr/bin/env nextflow
 
-// Using DSL-2
 nextflow.enable.dsl=2
 
-// Scrub human sequences from a single FASTQ file
-process scrub {
-    container "${params.container__scrubber}:${params.scrubber__version}"
-    publishDir "${params.output_folder}", mode: 'copy', overwrite: true
-    memory "${params.mem_gbs}.GB"
-    cpus "${params.cpus}"
-    
-    input:
-    path "input/"
+params.input          = null            // new: CSV sample sheet
+params.input_glob     = null            // existing
+params.input_filelist = null            // existing
+params.output_folder  = './results'
+params.cpus           = 8
+params.mem_gbs        = 64
 
-    output:
-    path "*"
-
-    script:
-    template 'scrub.sh'
-}
-
-// Function which prints help message text
-def helpMessage() {
-    log.info"""
-Usage:
-
-nextflow run FredHutch/sra-human-scrubber-nf <ARGUMENTS>
-
-Required Arguments:
-
-  Input Data:
-  --input_glob          Wildcard expression indicating the input files to be processed
-    AND/OR
-  --input_filelist      Path to file containing the list of files to process, one per line
-
-  Output Location:
-  --output_folder       Folder for output files
-
-  Version:
-  --container__scrubber The Docker image being used for the SRA Human Scrubber
-                        (default: ${params.container__scrubber})
-  --scrubber__version   The specific tag (version) of the Docker image being used
-                        (default: ${params.scrubber__version})
-
-  Resources:
-  --mem_gbs             Amount of memory used per process (in gigabytes)
-  --cpus                Number of CPUs used per process
-    """.stripIndent()
-}
-
-
-// Main workflow
 workflow {
 
-    // Show help message if the user specifies the --help flag at runtime
-    // or if any required params are not provided
-    if ( params.help || params.output_folder == false ){
-        // Invoke the function above which prints the help message
-        helpMessage()
-        // Exit out and do not run anything else
-        exit 1
-    }
-    
-
-    // Show help message if the user does not specify any inputs
-    if ( params.input_glob == false && params.input_filelist == false ){
-        // Invoke the function above which prints the help message
-        helpMessage()
-        // Exit out and do not run anything else
-        exit 1
-    }
-    
-    // Construct the inputs from both of the optional input sources
-    if ( params.input_glob ){
-        input_glob_ch = Channel.fromPath(
-            "${params.input_glob}",
-            checkIfExists: true,
-            glob: true
-        )
-    } else {
-        input_glob_ch = Channel.empty()
-    }
-
-    if ( params.input_filelist ){
-        input_filelist_ch = Channel.fromPath(
-            "${params.input_filelist}",
-            checkIfExists: true,
-            glob: false
-        )
-        .splitText()
-        .map {
-            it -> file(
-                // Remove the newline character from each line
-                it.substring(0, it.length() - 1),
-                checkIfExists: true
-            )
+    Channel
+        .empty()
+        .ifEmpty {
+            if ( params.input ) {
+                log.info "Launching multi-sample mode, using samplesheet: ${params.input}"
+                Channel
+                  .fromPath(params.input)
+                  .splitCsv(header: true)
+                  .map { row ->
+                      tuple(row.sample, file(row.fastq_1), file(row.fastq_2))
+                  }
+            }
+            else if ( params.input_glob ) {
+                log.info "Launching glob-input mode: ${params.input_glob}"
+                Channel.fromFilePairs(params.input_glob, flat: true)
+                       .map { sample, reads -> tuple(sample, reads[0], reads[1]) }
+            }
+            else if ( params.input_filelist ) {
+                log.info "Launching filelist mode: ${params.input_filelist}"
+                Channel.fromPath(params.input_filelist)
+                       .splitText()
+                       .map { f -> def sample = file(f).baseName.replaceAll(/_R[12].*$/, '')
+                                   tuple(sample, file(f), null) }
+            }
+            else {
+                error "No input specified! Provide --input, --input_glob, or --input_filelist"
+            }
         }
-    } else {
-        input_filelist_ch = Channel.empty()
+        .set{ samples_ch }
+
+    scrub_workflow(samples_ch)
+}
+
+workflow scrub_workflow {
+
+    input:
+    tuple val(sample), path(r1), path(r2)
+
+    main:
+    scrub_ch = Channel.of(tuple(sample, r1, r2))
+
+    process scrub {
+        tag "$sample"
+
+        input:
+        tuple val(sample), path(r1), path(r2)
+
+        output:
+        path "${sample}*.fastq*" into cleaned_ch
+
+        script:
+        """
+        scrubber \\
+          -i ${r1} ${ r2 ? "-i ${r2}" : "" } \\
+          -o ${sample}_clean_R1.fastq.gz \\
+          -p ${params.cpus}
+        """
     }
 
-    // Analyze data from both sources
-    scrub(
-        input_filelist_ch
-        .mix(input_glob_ch)
-    )
-
+    cleaned_ch.view { "Finished scrub on: ${it}" }
 }
