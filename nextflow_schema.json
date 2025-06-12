@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "string",
+      "format": "file-path",
+      "description": "CSV samplesheet (must include headers: sample, fastq_1, fastq_2)",
+      "mimetype": ["text/csv", "text/tsv"],
+      "order": 1
+    },
+    "input_glob": {
+      "type": "string",
+      "description": "Glob pattern for paired-end FASTQ (auto sample pair detection)",
+      "order": 2
+    },
+    "input_filelist": {
+      "type": "string",
+      "format": "file-path",
+      "description": "Plain file list (one FASTQ path per line)",
+      "order": 3
+    },
+    "output_folder": {
+      "type": "string",
+      "default": "./results",
+      "description": "Output directory for scrubbed FASTQ files",
+      "order": 4
+    },
+    "cpus": {
+      "type": "integer",
+      "default": 8,
+      "minimum": 1,
+      "description": "Number of CPU cores to allocate per job",
+      "order": 5
+    },
+    "mem_gbs": {
+      "type": "integer",
+      "default": 64,
+      "minimum": 1,
+      "description": "Memory (in GB) to allocate per job",
+      "order": 6
+    }
+  },
+  "required": ["output_folder", "cpus", "mem_gbs"],
+  "oneOf": [
+    { "required": ["input"] },
+    { "required": ["input_glob"] },
+    { "required": ["input_filelist"] }
+  ],
+  "additionalProperties": false
+}
