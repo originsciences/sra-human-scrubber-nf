@@ -62,7 +62,7 @@ Single samples:
 
 ---
 
-## 🛠️ Examples
+## Examples
 
 **Multi-sample (CSV)**:
 
@@ -117,8 +117,6 @@ The NCBI Human Read Removal Tool (HRRT) masks reads with k‑mers from a human-d
 MIT
 
 ---
-
-Let me know if you’d like help composing a commit, adding detailed examples, or integrating Nextflow reports!
 
 [1]: https://nf-co.re/rnaseq/2.0/docs/usage "rnaseq: Usage - nf-core"
 [2]: https://github.com/ncbi/sra-human-scrubber "ncbi/sra-human-scrubber - GitHub"
