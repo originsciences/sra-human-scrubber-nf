@@ -47,5 +47,5 @@
     { "required": ["input_glob"] },
     { "required": ["input_filelist"] }
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
