@@ -36,6 +36,7 @@ workflow {
         error("Specify one of --input, --input_glob or --input_filelist")
     }
 
+    // 1) Retrieve DB if needed
     if (params.sra_db) {
         sra_db_ch = Channel.value(file(params.sra_db))
     }
@@ -44,6 +45,7 @@ workflow {
         sra_db_ch = retrieve_sra_db.out.collect()
     }
 
+    // 2) Scrub FASTQS & generate reports
     scrub(samples_ch, sra_db_ch)
         | parseStats
         | collect
@@ -89,6 +91,7 @@ process scrub {
 }
 
 process parseStats {
+    container "biocontainers/gawk:5.3.0"
     tag "${sample}"
     publishDir "${params.output_folder}/${sample}", mode: 'copy', overwrite: true
 
@@ -110,6 +113,7 @@ process parseStats {
 }
 
 process report {
+    container "biocontainers/gawk:5.3.0"
     publishDir("${params.output_folder}/summary_report.csv", mode: 'copy', overwrite: true)
 
     input:
