@@ -87,11 +87,12 @@ process scrub {
       -o ${sample}_clean_R1.fastq.gz \
       -p ${params.cpus} \
       2>&1 | tee ${sample}.stats.txt
+    gzip ${sample}_clean_R1.fastq.gz
     """
 }
 
 process parseStats {
-    container "biocontainers/gawk:5.3.0"
+    container "quay.io/biocontainers/gawk:5.3.0"
     tag "${sample}"
     publishDir "${params.output_folder}/${sample}", mode: 'copy', overwrite: true
 
@@ -113,7 +114,7 @@ process parseStats {
 }
 
 process report {
-    container "biocontainers/gawk:5.3.0"
+    container "quay.io/biocontainers/gawk:5.3.0"
     publishDir("${params.output_folder}/summary_report.csv", mode: 'copy', overwrite: true)
 
     input:
