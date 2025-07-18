@@ -20,25 +20,37 @@
       "description": "Plain file list (one FASTQ path per line)",
       "order": 3
     },
+    "sra_db": {
+      "type": "string",
+      "format": "file-path",
+      "description": "Path to SRA database. Will be downloaded if not supplied.",
+      "order": 4
+    },
     "output_folder": {
       "type": "string",
       "default": "./results",
       "description": "Output directory for scrubbed FASTQ files",
-      "order": 4
+      "order": 5
+    },
+    "scrubber__version": {
+      "type": "string",
+      "default": "2.2.1",
+      "description": "SRA scrubber version to use",
+      "order": 6
     },
     "cpus": {
       "type": "integer",
       "default": 8,
       "minimum": 1,
       "description": "Number of CPU cores to allocate per job",
-      "order": 5
+      "order": 7
     },
     "mem_gbs": {
       "type": "integer",
       "default": 64,
       "minimum": 1,
       "description": "Memory (in GB) to allocate per job",
-      "order": 6
+      "order": 8
     }
   },
   "required": ["output_folder", "cpus", "mem_gbs"],
